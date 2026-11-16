@@ -3,7 +3,7 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_valid_encrypted_notification(bm6, make_connector, frame):
+async def test_valid_decrypted_notification(bm6, make_connector, frame):
     connector = make_connector()
     # Cipher is stubbed as identity; this exercises the decrypted-frame path.
     await connector._notify_callback(None, frame())
@@ -64,3 +64,24 @@ async def test_unknown_notification_type_logged(make_connector, caplog):
         await connector._notify_callback(None, bytearray.fromhex("aabbcc" + "00" * 13))
     assert connector._data.RealTime is None
     assert "unknown notification type" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_decrypt_value_error_ignored(make_connector, frame, monkeypatch, caplog):
+    connector = make_connector()
+    def invalid(_data):
+        raise ValueError("decrypt failed")
+    monkeypatch.setattr(connector, "_decrypt", invalid)
+    with caplog.at_level("DEBUG"):
+        await connector._notify_callback(None, frame())
+    assert connector._data.RealTime is None
+    assert "Unable to decrypt" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_negative_temperature(make_connector, frame):
+    connector = make_connector()
+    data = frame()
+    data[3] = 1  # temperature sign field
+    await connector._notify_callback(None, data)
+    assert connector._data.RealTime.Temperature == -24
