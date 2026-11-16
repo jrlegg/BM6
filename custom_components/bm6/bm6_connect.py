@@ -224,6 +224,7 @@ class BM6Connector:
                     scanner.ble_device,
                     self._address,
                     max_attempts=3,
+                    timeout=BLEAK_CLIENT_TIMEOUT,
                 )
                 try:
                     # Subscribe before sending the request, otherwise a fast reply
@@ -256,6 +257,10 @@ class BM6Connector:
                                 await asyncio.sleep(0.5)
                             if self._data.RealTime is not None:
                                 break
+                    if self._data.RealTime is None:
+                        raise BM6DeviceError(
+                            f"No valid real-time response from BM6 at {self._address}"
+                        )
                     _LOGGER.debug("Finishing wait for data from BM6 at %s", self._address)
 
                     # The following code is commented out but can be used to get firmware version data
