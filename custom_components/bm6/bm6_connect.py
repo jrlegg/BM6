@@ -156,15 +156,42 @@ class BM6Connector:
         return cipher.encrypt(data)
 
     async def _notify_callback(
-            self, 
-            sender: BleakGATTCharacteristic, 
+            self,
+            sender: BleakGATTCharacteristic,
             data: bytearray
     ):
         """Callback function to handle notifications from the BM6 device."""
-        message = self._decrypt(data).hex()
+        if not data or len(data) % 16 != 0:
+            _LOGGER.debug(
+                "Ignoring invalid encrypted notification from BM6 at %s",
+                self._address,
+            )
+            return
+
+        try:
+            message = self._decrypt(data).hex()
+        except ValueError:
+            _LOGGER.debug(
+                "Unable to decrypt notification from BM6 at %s",
+                self._address,
+                exc_info=True,
+            )
+            return
+
         _LOGGER.debug("Received data from BM6 at %s: %s", self._address, message)
         if message.startswith(GATT_NOTIFY_REALTIME_PREFIX):
-            real_time = BM6RealTimeData(message)
+            try:
+                if len(message) < 26:
+                    raise ValueError("Incomplete real-time notification")
+                real_time = BM6RealTimeData(message)
+            except ValueError:
+                _LOGGER.debug(
+                    "Ignoring malformed real-time notification from BM6 at %s",
+                    self._address,
+                    exc_info=True,
+                )
+                return
+
             # Right after subscribing the BM6 sends an empty all-zero frame; the
             # BM6 is powered by the battery itself, so 0 V is never a real reading.
             if real_time.Voltage == 0:
@@ -182,6 +209,12 @@ class BM6Connector:
                 "Decoded firmware version from BM6 at %s: %s",
                 self._address,
                 self._data.Firmware,
+            )
+        else:
+            _LOGGER.debug(
+                "Ignoring unknown notification type from BM6 at %s: %s",
+                self._address,
+                message[:16],
             )
 
     async def _cleanup(self, client: BleakClient) -> None:
