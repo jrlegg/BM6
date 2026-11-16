@@ -3,9 +3,9 @@ name: BM6 isolated unit tests
 
 on:
   push:
-    branches: [bm6-pytest-validation]
+    branches: [bm6-pytest-validation, bm6-combined-1.0.7]
   pull_request:
-    branches: [bm6-pytest-validation]
+    branches: [bm6-pytest-validation, bm6-combined-1.0.7]
   workflow_dispatch:
 
 permissions:
