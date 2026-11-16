@@ -1,0 +1,22 @@
+
+name: BM6 isolated unit tests
+
+on:
+  push:
+    branches: [bm6-pytest-validation]
+  pull_request:
+    branches: [bm6-pytest-validation]
+  workflow_dispatch:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install test dependencies
+        run: python -m pip install pytest pytest-asyncio
+      - name: Run BM6 tests
+        run: python -m pytest -q tests
