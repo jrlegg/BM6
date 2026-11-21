@@ -431,6 +431,7 @@ class BM6LastSuccessfulReadingSensor(BM6SensorEntity):
         self._attr_suggested_object_id = (
             f"bm6_{self._device_address.lower().replace(':', '_')}_{self._attr_translation_key}"
         )
+
     _attr_translation_key = "last_successful_reading"
     _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -458,6 +459,7 @@ class BM6ReadingHealthSensor(BM6SensorEntity):
         self._attr_suggested_object_id = (
             f"bm6_{self._device_address.lower().replace(':', '_')}_{self._attr_translation_key}"
         )
+
     _attr_translation_key = "reading_health"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:heart-pulse"
